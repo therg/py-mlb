@@ -1,14 +1,12 @@
-#!/usr/bin/env python
 from fetcher import Fetcher
 from py_mlb import logger
-from db import DB
 
 import logging
 import datetime
 
 class Player(dict):
     """A MLB player"""
-    def __init__(self, player_id = None):
+    def __init__(self, player_id=None):
         """
         Constructor
         
@@ -23,7 +21,8 @@ class Player(dict):
         # career totals
         self.career = {}
         
-        if self.player_id is not None: self.load()
+        if self.player_id is not None:
+            self.load()
 
 
     def loadYearlies(self):
@@ -38,7 +37,8 @@ class Player(dict):
         j = f.fetch()
         
         # if the JSON object is empty, bail
-        if len(j.keys()) == 0: return
+        if len(j.keys()) == 0:
+            return
         
         # get yearly totals
         if self['primary_position'] == 1:
@@ -50,13 +50,23 @@ class Player(dict):
             records = parent['row']
 
             # accounting for player with only one row
-            if type(records) is dict: records = [records]
+            if type(records) is dict:
+                records = [records]
             
             for row in records:
                 log = {}
-                for key, value in row.iteritems(): log[key] = value
-                self.totals[row['season']] = log
-            
+                for key, value in row.iteritems():
+                    log[key] = value
+
+                # handle each season as a list, so 
+                # players with multiple team seasons
+                # get each team for that year
+                # accounted for
+                if row['season'] in self.totals:
+                    self.totals[row['season']].append(log)
+                else:
+                    self.totals[row['season']] = [log]
+
         # get career totals
         if self['primary_position'] == 1:
             parent = j['mlb_bio_pitching_summary']['mlb_individual_pitching_career']['queryResults']
@@ -64,10 +74,11 @@ class Player(dict):
             parent = j['mlb_bio_hitting_summary']['mlb_individual_hitting_career']['queryResults']
             
         if parent['totalSize'] > 0:
-            for key, value in parent['row'].iteritems(): self.career[key] = value
+            for key, value in parent['row'].iteritems():
+                self.career[key] = value
 
 
-    def loadGamelogs(self, year = None):
+    def loadGamelogs(self, year=None):
         """
         Loads gamelogs for the player for a given year
         
@@ -114,36 +125,8 @@ class Player(dict):
                 self.logs[year].append(log)
 
 
-    def saveGamelogs(self):
-        """
-        Saves player game logs to database
-        """
-        try:
-            db = DB()
-        except:
-            return False
 
-        # need to check for empty and set to None
-        for year, logs in self.logs.iteritems():
-            for log in logs:
-                table = 'log_pitcher' if self['primary_position'] == 1 else 'log_batter'
-                log['player_id'] = self['player_id']
-                db.savedict(log, table)
-
-
-    def save(self):
-        """
-        Saves player information to database
-        """
-        try:
-            db = DB()
-        except:
-            return False
-
-        db.savedict(self, 'player')
-
-
-    def load(self, id = None):
+    def load(self, id=None):
         """
         Calls MLB.com server and loads player information. If call fails, '_error' property is set.
     
@@ -182,17 +165,3 @@ class Player(dict):
 
         for key, value in records.iteritems(): self[key] = value
         self.loadYearlies()
-
-
-if __name__ == '__main__':
-    from pprint import pprint
-    #log = logging.getLogger('py_mlb')
-    #log.setLevel(logging.DEBUG)
-    #log.addHandler(logging.StreamHandler())
-    
-    batter = Player(400085)
-    pitcher = Player(433587)
-    pitcher.loadYearlies()
-    pitcher.loadGamelogs()
-    pitcher.save()
-    pitcher.saveGamelogs()

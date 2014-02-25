@@ -1,10 +1,9 @@
-#!/usr/bin/env python
 from fetcher import Fetcher
 import team
 
 class League:
     """Represents the league"""
-    def __init__(self, loadRosters = False):
+    def __init__(self, loadRosters=False):
         """
         Constructor
 
@@ -15,7 +14,7 @@ class League:
         self.load(loadRosters)
 
 
-    def load(self, loadRosters = False):
+    def load(self, loadRosters=False):
         """
         Calls MLB.com server and loads all team information
 
@@ -29,17 +28,3 @@ class League:
             if loadRosters:
                 t.loadRoster()
             self.teams[t['team_code']] = t
-
-
-    def save(self):
-        for team_code, team in self.teams.iteritems(): team.save()
-
-
-if __name__ == '__main__':
-    import logging
-    log = logging.getLogger('py_mlb')
-    log.setLevel(logging.DEBUG)
-    log.addHandler(logging.StreamHandler())
-
-    league = League(True)
-    league.save()

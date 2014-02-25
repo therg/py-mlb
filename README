@@ -1,46 +1,10 @@
-YE DESCRIPTION
--
+###DESCRIPTION
+
 MLB.com has a kind-of, sort-of API, providing a lot of league, team, and player information in XML and/or JSON. This
 is a python abstraction library for that API.
 
 
-YE REQUIREMENTS
--
+###REQUIREMENTS
+
 Python 2.6+ (2.5 will not work)
-
-To save player data and game logs:
-MySQLDb
-MySQL 5.0 and up, maybe 4.x too - who knows?
-
-
-YE INSTRUCTIONS
--
-python setup.py install
-
-To save player data and game logs:
-* mysql -D DATABASE < sql/schema.sql
-* Create a '.db.cfg' file in your home directory with valid MySQLdb connection information
- - http://mysql-python.sourceforge.net/MySQLdb.html
- - Check examples/.db.cfg for example
-* Run:
-    cd py_mlb
-    python league.py
-
-
-YE CAVEATS
--
-A work in progress! Still some design issues to iron out. Please do let me know if you think of any suggestions.
-
-
-YE TODO
--
-* Add an easy sorting mechanism to team and league
-* Better handle HTTP errors inside Fetcher
-* Add memcache support
-
-
-YE POINT OF CONTACT
--
-Wells Oliver, wells@submute.net
-http://blog.wellsoliver.com
 

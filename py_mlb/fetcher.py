@@ -1,9 +1,8 @@
-#!/usr/bin/env python
 import re
 import json
-import libxml2
-import urllib2
+import requests
 import sys
+from xml.etree import ElementTree
 
 from py_mlb import logger, parseJSON, formatValue
 
@@ -58,64 +57,57 @@ class Fetcher:
         url = re.sub('%%.+?%%', '', url)
         self.url = url
 
-    def fetch(self, returnRaw = False):
+    def fetch(self, raw=False):
         """
         Makes the HTTP request to the MLB.com server and handles the response
         """
-        req = urllib2.Request(self.url)
+        req = requests.get(self.url)
         
         if self.url.find('xml') >= 0:
-            reqType = 'XML'
+            req_type = 'XML'
         elif self.url.find('json') >= 0:
-            reqType = 'JSON'
+            req_type = 'JSON'
         else:
-            reqType = 'HTML'
+            req_type = 'HTML'
 
         logger.debug("fetching %s" % self.url)
 
-        try:
-            res = urllib2.urlopen(req)
-            content = res.read()
-        except (urllib2.URLError, IOError), e:
+        if req.status_code != requests.status_codes.codes.OK:
+            logger.error("Status code {0} returned from {1}".format(req.status_code,
+                self.url))
             return {}
 
-        if returnRaw:
-            return content
+        if raw:
+            return req.content
 
-        if reqType == 'JSON':
-            # remove code comments that MLB puts in the response
-            content = re.sub('\/\*.+?\*\/', '', content)
+        if req_type == 'JSON':
             
             try:
-                obj = json.loads(content)
-                return parseJSON(obj)
+                return parseJSON(req.json())
             except Exception, e:
                 # log the error and return an empty object
                 logger.error("error parsing %s\n%s\n%s" % (self.url, e, content))
                 return {}
-        elif reqType == 'XML':
-            """
-            need to abstract this a lot more, currently XML is only for the team list
-            and like as you see it returns specific nodes - it needs to just return an
-            object and then that should be traversed elsewhere.
-            """
+
+        elif req_type == 'XML':
             obj = []
-            xml = libxml2.parseDoc(content)
-            ctxt = xml.xpathNewContext()
-            nodes = ctxt.xpathEval("/mlb/leagues/league[@club='mlb']/teams/team")
-            
+            tree = ElementTree.fromstring(req.content)
+            teams_ele = tree.find("leagues/league[@club='mlb']/teams")
+
+            nodes = []
+            if teams_ele is not None:
+                nodes = teams_ele.getchildren()
+
             if len(nodes) != 30:
                 return obj
                 
             for node in nodes:
                 team = {}
-                for prop in node.properties:
-                    val = prop.content
-                    team[prop.name] = formatValue(prop.content)
+                for key in node.keys():
+                    team[key] = formatValue(node.get(key, ''))
                 obj.append(team)
-                
-            xml.freeDoc()
-            ctxt.xpathFreeContext()
+            
             return obj
-        elif reqType == 'HTML':
-            return content
+        
+        elif req_type == 'HTML':
+            return req.content

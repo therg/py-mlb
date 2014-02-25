@@ -1,6 +1,4 @@
-#!/usr/bin/env python
 from fetcher import Fetcher
-from db import DB
 import player
 
 class Team(dict):
@@ -13,7 +11,8 @@ class Team(dict):
         attributes - A dict of key/value pairs used to populate the team, passed by the league information
         """
         self.roster = {}
-        for key, value in attributes.iteritems(): self[key] = value
+        for key, value in attributes.iteritems():
+            self[key] = value
     
     def loadRoster(self):
         """
@@ -43,17 +42,5 @@ class Team(dict):
         """
         if player_id in self.roster:
             return self.roster[player_id]
-        else:
-            return None
 
-
-    def save(self):
-        try:
-            db = DB()
-        except:
-            return False
-
-        db.savedict(self, 'team')
-        
-        if len(self.roster) > 1:
-            for player_id, p in self.roster.iteritems(): p.save()
+        return None

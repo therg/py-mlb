@@ -1,6 +1,4 @@
-#!/usr/bin/env python
 from fetcher import Fetcher
-from db import DB
 import json
 import datetime, time
 import calendar
@@ -9,7 +7,7 @@ from . import parseJSON
 
 class Transactions(list):
     """Transactions is a list of dict objects containing MLB transactions"""
-    def __init__(self, year, month, day = None):
+    def __init__(self, year, month, day=None):
         """
         Constructor
         
@@ -43,13 +41,3 @@ class Transactions(list):
         except (ValueError, KeyError), e:
             logger.error("ERROR %s on %s" % (e, f.url))
             pass
-
-
-    def save(self):
-        try:
-            db = DB()
-        except:
-            return False
-
-        for tr in self:
-            db.savedict(tr, 'transaction')
