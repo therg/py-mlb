@@ -38,21 +38,21 @@ class Fetcher:
         "?league_id=104&start_date=%start%&end_date=%end%"
     # transactions archive - not yet used
     MLB_TRANSACTION_URL_ARCHIVE = "http://web.minorleaguebaseball.com/gen/stats/jsdata/2005/leagues/l113_200507_tra.js"
-        
+
     # NOT YET USED
     MLB_STANDINGS_URL = "http://mlb.mlb.com/lookup/named.standings_all_league_repeater.bam" \
         "?sit_code=%27h0%27&season=2005&league_id=103&league_id=104"
-    
+
     def __init__(self, url, **kwargs):
         """
         Constructor
-        
+
         url : URL to fetch, one of the URLs defined in the Fetcher class
-        kwargs : Any passed keyword is replaced into the URL with %key% format        
+        kwargs : Any passed keyword is replaced into the URL with %key% format
         """
         for key in kwargs.keys():
             url = url.replace('%%%s%%' % key, str(kwargs[key]))
-        
+
         # get rid of any unmatched %key% fields
         url = re.sub('%%.+?%%', '', url)
         self.url = url
@@ -62,7 +62,7 @@ class Fetcher:
         Makes the HTTP request to the MLB.com server and handles the response
         """
         req = requests.get(self.url)
-        
+
         if self.url.find('xml') >= 0:
             req_type = 'XML'
         elif self.url.find('json') >= 0:
@@ -81,7 +81,7 @@ class Fetcher:
             return req.content
 
         if req_type == 'JSON':
-            
+
             try:
                 return parseJSON(req.json())
             except Exception, e:
@@ -96,18 +96,18 @@ class Fetcher:
 
             nodes = []
             if teams_ele is not None:
-                nodes = teams_ele.getchildren()
+                nodes = list(teams_ele)
 
             if len(nodes) != 30:
                 return obj
-                
+
             for node in nodes:
                 team = {}
                 for key in node.keys():
                     team[key] = formatValue(node.get(key, ''))
                 obj.append(team)
-            
+
             return obj
-        
+
         elif req_type == 'HTML':
             return req.content
