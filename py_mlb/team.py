@@ -30,7 +30,9 @@ class Team(dict):
         if parent['totalSize'] > 0:
             for record in parent['row']:
                 player_id = record['player_id']
-                self.roster[player_id] = player.Player(player_id)
+                p = player.Player(player_id)
+                p.load()
+                self.roster[player_id] = p
 
 
     def getPlayer(self, player_id):

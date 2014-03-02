@@ -6,7 +6,7 @@ import datetime
 
 class Player(dict):
     """A MLB player"""
-    def __init__(self, player_id=None, load_yearlies=False):
+    def __init__(self, player_id=None):
         """
         Constructor
 
@@ -20,9 +20,6 @@ class Player(dict):
         self.totals = {}
         # career totals
         self.career = {}
-
-        if self.player_id is not None:
-            self.load(load_yearlies)
 
 
     def loadYearlies(self):
@@ -126,7 +123,7 @@ class Player(dict):
 
 
 
-    def load(self, load_yearlies, id=None):
+    def load(self, load_yearlies=False, id=None):
         """
         Calls MLB.com server and loads player information. If call fails, '_error' property is set.
 
