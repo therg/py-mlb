@@ -6,10 +6,10 @@ import datetime
 
 class Player(dict):
     """A MLB player"""
-    def __init__(self, player_id=None):
+    def __init__(self, player_id=None, load_yearlies=False):
         """
         Constructor
-        
+
         Arguments:
         player_id : The MLB.com ID attribute for the given player
         """
@@ -20,9 +20,9 @@ class Player(dict):
         self.totals = {}
         # career totals
         self.career = {}
-        
+
         if self.player_id is not None:
-            self.load()
+            self.load(load_yearlies)
 
 
     def loadYearlies(self):
@@ -33,32 +33,32 @@ class Player(dict):
             f = Fetcher(Fetcher.MLB_PITCHER_SUMMARY_URL, player_id=self.player_id)
         else:
             f = Fetcher(Fetcher.MLB_BATTER_SUMMARY_URL, player_id=self.player_id)
-        
+
         j = f.fetch()
-        
+
         # if the JSON object is empty, bail
         if len(j.keys()) == 0:
             return
-        
+
         # get yearly totals
         if self['primary_position'] == 1:
             parent = j['mlb_bio_pitching_summary']['mlb_individual_pitching_season']['queryResults']
         else:
             parent = j['mlb_bio_hitting_summary']['mlb_individual_hitting_season']['queryResults']
-        
+
         if parent['totalSize'] > 0:
             records = parent['row']
 
             # accounting for player with only one row
             if type(records) is dict:
                 records = [records]
-            
+
             for row in records:
                 log = {}
                 for key, value in row.iteritems():
                     log[key] = value
 
-                # handle each season as a list, so 
+                # handle each season as a list, so
                 # players with multiple team seasons
                 # get each team for that year
                 # accounted for
@@ -72,7 +72,7 @@ class Player(dict):
             parent = j['mlb_bio_pitching_summary']['mlb_individual_pitching_career']['queryResults']
         else:
             parent = j['mlb_bio_hitting_summary']['mlb_individual_hitting_career']['queryResults']
-            
+
         if parent['totalSize'] > 0:
             for key, value in parent['row'].iteritems():
                 self.career[key] = value
@@ -81,19 +81,19 @@ class Player(dict):
     def loadGamelogs(self, year=None):
         """
         Loads gamelogs for the player for a given year
-        
+
         Arguments:
         year : The season desired. Defaults to the current year if not specified
         """
         if year is None: year = datetime.datetime.now().year
         if year not in self.logs: self.logs[year] = []
-        
+
         if 'primary_position' not in self:
             logger.error("no primary position attribute for " % self)
             return False
 
         url = Fetcher.MLB_PITCHER_URL if self['primary_position'] == 1 else Fetcher.MLB_BATTER_URL
-        
+
         f = Fetcher(url, player_id=self.player_id, year=year)
         j = f.fetch()
 
@@ -116,20 +116,20 @@ class Player(dict):
             if type(records) is dict: records = [records]
 
             for row in records:
-                log = {}    
+                log = {}
                 for key, value in row.iteritems(): log[key] = value
-                
+
                 # some fixes
                 if 'era' in log and (log['era'] == '-.--' or log['era'] == '*.**'): log['era'] = None
-                
+
                 self.logs[year].append(log)
 
 
 
-    def load(self, id=None):
+    def load(self, load_yearlies, id=None):
         """
         Calls MLB.com server and loads player information. If call fails, '_error' property is set.
-    
+
         Arguments:
         id : The MLB.com player ID
         """
@@ -141,7 +141,7 @@ class Player(dict):
 
         f = Fetcher(Fetcher.MLB_PLAYER_URL, player_id=self.player_id)
         j = f.fetch()
-        
+
         try:
             records = j['player_info']['queryResults']['totalSize']
         except KeyError, e:
@@ -163,5 +163,9 @@ class Player(dict):
             logger.error('ERROR on %s: key %s not found\n%s' % (f.url, e, j))
             return False
 
-        for key, value in records.iteritems(): self[key] = value
-        self.loadYearlies()
+        for key, value in records.iteritems():
+            self[key] = value
+
+        if load_yearlies:
+            self.loadYearlies()
+
