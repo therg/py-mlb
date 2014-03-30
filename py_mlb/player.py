@@ -6,7 +6,7 @@ import datetime
 
 class Player(dict):
     """A MLB player"""
-    def __init__(self, player_id=None):
+    def __init__(self, player_id=None, force_batting=False):
         """
         Constructor
 
@@ -14,6 +14,7 @@ class Player(dict):
         player_id : The MLB.com ID attribute for the given player
         """
         self.player_id = player_id
+        self.force_batting = force_batting
         # game logs
         self.logs = {}
         # yearly totals
@@ -26,7 +27,7 @@ class Player(dict):
         """
         Loads yearly and career totals for a player
         """
-        if self['primary_position'] == 1:
+        if self['primary_position'] == 1 and not self.force_batting:
             f = Fetcher(Fetcher.MLB_PITCHER_SUMMARY_URL, player_id=self.player_id)
         else:
             f = Fetcher(Fetcher.MLB_BATTER_SUMMARY_URL, player_id=self.player_id)
@@ -38,7 +39,7 @@ class Player(dict):
             return
 
         # get yearly totals
-        if self['primary_position'] == 1:
+        if self['primary_position'] == 1 and not self.force_batting:
             parent = j['mlb_bio_pitching_summary']['mlb_individual_pitching_season']['queryResults']
         else:
             parent = j['mlb_bio_hitting_summary']['mlb_individual_hitting_season']['queryResults']
@@ -65,7 +66,7 @@ class Player(dict):
                     self.totals[row['season']] = [log]
 
         # get career totals
-        if self['primary_position'] == 1:
+        if self['primary_position'] == 1 and not self.force_batting:
             parent = j['mlb_bio_pitching_summary']['mlb_individual_pitching_career']['queryResults']
         else:
             parent = j['mlb_bio_hitting_summary']['mlb_individual_hitting_career']['queryResults']
