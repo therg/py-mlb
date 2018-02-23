@@ -161,9 +161,15 @@ class Player(dict):
             logger.error('ERROR on %s: key %s not found\n%s' % (f.url, e, j))
             return False
 
+        if not isinstance(records, dict):
+            msg = 'ERROR on %s: records should be a dict but got a %s' % (
+                f.url, type(records))
+            self._error = msg
+            logger.error(msg)
+            return False
+
         for key, value in records.iteritems():
             self[key] = value
 
         if load_yearlies:
             self.loadYearlies()
-

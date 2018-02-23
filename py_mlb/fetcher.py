@@ -86,7 +86,7 @@ class Fetcher:
                 return parseJSON(req.json())
             except Exception, e:
                 # log the error and return an empty object
-                logger.error("error parsing %s\n%s\n%s" % (self.url, e, content))
+                logger.error("error parsing %s\n%s\n%s" % (self.url, e, req.content))
                 return {}
 
         elif req_type == 'XML':
